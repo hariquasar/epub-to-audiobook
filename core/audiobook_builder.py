@@ -161,16 +161,115 @@ class AudiobookBuilder:
                 self._save_manifest(manifest)
                 raise RuntimeError(f"Chunk {idx} failed after 3 attempts: {last_err}")
 
-        # Combine into master audiobook FLAC
+        # Combine into master audiobook FLAC and M4B with chapters
         final_flac = self._combine_flac(manifest)
-        print(f"[AudiobookBuilder] Completed! Final audiobook saved at: {final_flac}")
-        return final_flac
+        final_m4b = self._export_m4b(manifest, final_flac)
+        print(f"[AudiobookBuilder] Completed! Master files:\n  FLAC: {final_flac}\n  M4B : {final_m4b}")
+        return final_m4b or final_flac
 
     def _save_manifest(self, manifest: dict) -> None:
         (self.output_dir / "manifest.json").write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
+
+    def _export_m4b(self, manifest: dict, flac_path: Path) -> Optional[Path]:
+        """Generate Apple Books / Audiobookshelf compatible .m4b with chapter markers."""
+        import shutil
+        import subprocess
+
+        ffmpeg = shutil.which("ffmpeg")
+        if not ffmpeg:
+            print("[AudiobookBuilder] FFmpeg not found, skipping M4B chapter export.")
+            return None
+
+        # Build chapter timing
+        chapters_timing: list[dict] = []
+        current_chapter_idx = None
+        current_title = ""
+        current_start_ms = 0
+        running_ms = 0
+
+        for entry in manifest["chunks"]:
+            dur_s = entry.get("audit", {}).get("duration_seconds", 0)
+            if not dur_s and (self.output_dir / entry["audio"]).exists():
+                info = sf.info(str(self.output_dir / entry["audio"]))
+                dur_s = info.duration
+
+            dur_ms = int(dur_s * 1000)
+            chap_idx = entry.get("chapter_index", 1)
+            chap_title = entry.get("chapter_title", f"Chapter {chap_idx}")
+
+            if current_chapter_idx != chap_idx:
+                if current_chapter_idx is not None:
+                    chapters_timing.append(
+                        {
+                            "title": current_title,
+                            "start": current_start_ms,
+                            "end": running_ms,
+                        }
+                    )
+                current_chapter_idx = chap_idx
+                current_title = chap_title
+                current_start_ms = running_ms
+
+            running_ms += dur_ms
+
+        if current_chapter_idx is not None:
+            chapters_timing.append(
+                {
+                    "title": current_title,
+                    "start": current_start_ms,
+                    "end": running_ms,
+                }
+            )
+
+        # Write FFMETADATA1 file
+        meta_lines = [
+            ";FFMETADATA1",
+            f"title={manifest.get('title', 'Audiobook')}",
+            f"artist={manifest.get('author', 'Unknown')}",
+            f"album={manifest.get('title', 'Audiobook')}",
+            "genre=Audiobook",
+        ]
+        for ch in chapters_timing:
+            meta_lines.extend(
+                [
+                    "[CHAPTER]",
+                    "TIMEBASE=1/1000",
+                    f"START={ch['start']}",
+                    f"END={ch['end']}",
+                    f"title={ch['title']}",
+                ]
+            )
+
+        meta_file = self.output_dir / "metadata.txt"
+        meta_file.write_text("\n".join(meta_lines) + "\n", encoding="utf-8")
+
+        m4b_path = self.output_dir / "audiobook.m4b"
+        cmd = [
+            ffmpeg,
+            "-y",
+            "-i",
+            str(flac_path),
+            "-i",
+            str(meta_file),
+            "-map_metadata",
+            "1",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            "-f",
+            "mp4",
+            str(m4b_path),
+        ]
+        try:
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            return m4b_path
+        except Exception as exc:
+            print(f"[AudiobookBuilder] FFmpeg M4B conversion warning: {exc}")
+            return None
 
     def _combine_flac(self, manifest: dict) -> Path:
         """Combine all passed chunks into a single master FLAC file."""
