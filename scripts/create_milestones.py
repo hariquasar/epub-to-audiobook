@@ -7,23 +7,28 @@ import sys
 MILESTONES = [
     {
         "title": "v0.1.0 - Core Engine & BYOM Multi-Backend (Current Release)",
-        "description": "Foundational release supporting EPUB parsing, sentence-safe chunking, Qwen3-TTS & EdgeTTS backends, CLI & Gradio Web UI.",
+        "description": "Foundational release: EPUB parsing, sentence-preserving chunking (0% comma splits), Qwen3-TTS & EdgeTTS backends, 300ms tail buffer, anti-truncation audit, M4B chapter export, CLI & Gradio Web UI.",
         "due_date": "2026-09-05T00:00:00Z",
     },
     {
-        "title": "v0.2.0 - Advanced Audio Packaging & Voice Cloning",
-        "description": "Support for Apple Books / Audiobookshelf M4B chapter metadata, EBU R128 loudness normalization, and reference voice cloning.",
+        "title": "v0.2.0 - Psychoacoustics & ACX Audio Mastering Standards",
+        "description": "Audible ACX & AES TD1004 mastering compliance (-20 dB RMS, -3 dBTP True Peak limiter, < -60 dB noise floor), EBU R128 loudness normalizer, and zero-shot voice cloning from 3s reference audio.",
         "due_date": "2026-09-20T00:00:00Z",
     },
     {
-        "title": "v0.3.0 - Multi-Speaker Dialogue & Batch Processing",
-        "description": "Automatic character dialogue extraction, multi-speaker role assignment, parallel processing queue, and Docker deployment.",
+        "title": "v0.3.0 - Computational Narratology & Multi-Speaker Dramatization",
+        "description": "Context-aware prosody modeling (Interspeech/ACL research), automatic character dialogue extraction, narrator/character voice assignment, parallel batch processing queue, and Docker containerization.",
         "due_date": "2026-10-10T00:00:00Z",
     },
     {
+        "title": "v0.4.0 - Time-Aligned Transcripts & HCI Enhancements",
+        "description": "Word/sentence-level synchronized WebVTT/LRC transcript generation for read-along listening, speed-invariant pitch scaling optimization (1.25x–2.0x playback), and chapter art embedding.",
+        "due_date": "2026-10-25T00:00:00Z",
+    },
+    {
         "title": "v1.0.0 - Production Readiness & Open Cloud APIs",
-        "description": "Production-grade OpenAPI server, complete multi-lingual support, Audiobookshelf direct library sync, and test coverage > 90%.",
-        "due_date": "2026-11-01T00:00:00Z",
+        "description": "OpenAI /v1/audio/speech standard API compatibility server, Audiobookshelf direct library sync, full test coverage > 90%, and end-to-end multi-lingual translation-narration pipeline.",
+        "due_date": "2026-11-15T00:00:00Z",
     },
 ]
 

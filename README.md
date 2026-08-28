@@ -85,6 +85,8 @@ epub-to-audiobook/
 ├── web_ui.py                 # Gradio Web UI application
 ├── pyproject.toml            # Project metadata and tool configuration
 ├── requirements.txt          # Core dependencies
+├── docs/
+│   └── academic_research_audiobook_quality.md # Multi-disciplinary research report
 ├── core/
 │   ├── __init__.py
 │   ├── config.py             # Presets, style definitions, and model constants
@@ -98,6 +100,24 @@ epub-to-audiobook/
     ├── test_text_processor.py
     └── test_tts_engine.py
 ```
+
+---
+
+## 📚 Academic Research & Scientific Foundations
+
+This project is built on cross-disciplinary scientific research across Cognitive Psychology, Psychoacoustics, Speech Synthesis (ACL / Interspeech), and Audio Engineering (AES TD1004 / Audible ACX).
+
+Read our full research paper: [docs/academic_research_audiobook_quality.md](docs/academic_research_audiobook_quality.md).
+
+---
+
+## 🗺️ Product Roadmap & Milestones
+
+- ✅ **v0.1.0 - Core Engine & BYOM Multi-Backend** (Current Release): EPUB parsing, sentence-safe chunker (0% comma splits), Qwen3-TTS & EdgeTTS backends, 300ms tail buffer, anti-truncation audit, M4B chapter export, Web UI & CLI.
+- 🎯 **v0.2.0 - Psychoacoustics & ACX Audio Mastering Standards**: Audible ACX (-20 dB RMS, -3 dBTP limiter, < -60 dB noise floor), EBU R128 loudness normalizer, and zero-shot reference voice cloning.
+- 🎯 **v0.3.0 - Computational Narratology & Multi-Speaker Dramatization**: Context-aware prosody modeling (Interspeech/ACL), automatic character dialogue extraction, narrator/character voice assignment, parallel batch processing, Docker container.
+- 🎯 **v0.4.0 - Time-Aligned Transcripts & HCI Enhancements**: Synchronized WebVTT / LRC read-along transcripts, speed-invariant pitch scaling optimization (1.25x–2.0x playback), chapter cover embedding.
+- 🎯 **v1.0.0 - Production Readiness & Open Cloud APIs**: OpenAI `/v1/audio/speech` standard API server, Audiobookshelf library sync, >90% test coverage, and multi-lingual translation pipeline.
 
 ---
 
