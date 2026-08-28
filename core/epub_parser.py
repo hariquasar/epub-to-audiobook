@@ -1,11 +1,11 @@
 """EPUB file parser and text extractor."""
+
 from __future__ import annotations
 
 import re
-import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import ebooklib
 from bs4 import BeautifulSoup
@@ -65,7 +65,6 @@ def clean_html_text(html_content: bytes | str) -> tuple[str, str]:
 
     # Normalize whitespace inside paragraphs
     cleaned_paragraphs = []
-    seen = set()
     for p in paragraphs:
         normalized = re.sub(r"[ \t\u3000]+", " ", p).strip()
         # Avoid duplicate header additions

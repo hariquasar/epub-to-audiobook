@@ -1,7 +1,7 @@
 """Gradio Web Interface for Qwen3-TTS EPUB Audiobook Generator."""
+
 from __future__ import annotations
 
-import os
 import tempfile
 from pathlib import Path
 from typing import Optional
@@ -10,10 +10,8 @@ import gradio as gr
 import soundfile as sf
 
 from core import (
-    AudiobookBuilder,
-    DEFAULT_MAX_CHARS,
-    DEFAULT_SPEAKER,
     STYLE_PRESETS,
+    AudiobookBuilder,
     TTSEngine,
     parse_epub,
 )

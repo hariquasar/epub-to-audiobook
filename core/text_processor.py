@@ -1,11 +1,13 @@
 """Text processing, normalization, and sentence-preserving chunking."""
+
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+from typing import List
 
 try:
     import opencc
+
     _T2S_CONVERTER = opencc.OpenCC("t2s")
 except Exception:
     _T2S_CONVERTER = None
@@ -32,7 +34,7 @@ def split_sentences(text: str) -> List[str]:
 
 def chunk_text(text: str, max_chars: int = 200) -> List[str]:
     """Build bounded chunks without splitting inside sentences unless a single sentence exceeds max_chars.
-    
+
     Guarantees:
     - Never breaks in the middle of a sentence unless an isolated sentence is > max_chars.
     - Concatenation of all chunks restores the exact input text.

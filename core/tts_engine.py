@@ -1,12 +1,11 @@
 """TTS Engine interface for Qwen3-TTS with silence tightening and quality auditing."""
+
 from __future__ import annotations
 
-import time
 from pathlib import Path
 from typing import Optional, Tuple
 
 import numpy as np
-import soundfile as sf
 import torch
 from qwen_tts import Qwen3TTSModel
 
@@ -20,7 +19,9 @@ from .config import (
 )
 
 
-def tighten_silences(audio: np.ndarray, sr: int, threshold: float = 0.008, max_silence_s: float = MAX_SILENCE_SECONDS) -> np.ndarray:
+def tighten_silences(
+    audio: np.ndarray, sr: int, threshold: float = 0.008, max_silence_s: float = MAX_SILENCE_SECONDS
+) -> np.ndarray:
     """Keep natural punctuation pauses but cap generated dead air at max_silence_s."""
     if getattr(audio, "ndim", 1) > 1:
         audio = audio.mean(axis=1)

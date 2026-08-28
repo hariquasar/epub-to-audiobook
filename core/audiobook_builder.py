@@ -1,4 +1,5 @@
 """Audiobook assembly pipeline and manifest manager."""
+
 from __future__ import annotations
 
 import hashlib
@@ -8,13 +9,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, List, Optional
 
-import numpy as np
 import soundfile as sf
 
 from .config import DEFAULT_MAX_CHARS, DEFAULT_SPEAKER, STYLE_PRESETS
-from .epub_parser import ParsedBook, parse_epub
+from .epub_parser import parse_epub
 from .text_processor import chunk_text, to_simplified
-from .tts_engine import TTSEngine, audit_audio
+from .tts_engine import TTSEngine
 
 
 def sha256_str(s: str) -> str:
@@ -50,7 +50,9 @@ class AudiobookBuilder:
     ) -> Path:
         """Process an EPUB file into a full audiobook with chapter checkpoints."""
         parsed_book = parse_epub(epub_path)
-        print(f"[AudiobookBuilder] Parsed '{parsed_book.title}' by {parsed_book.author} ({len(parsed_book.chapters)} chapters, {parsed_book.total_characters} characters)")
+        print(
+            f"[AudiobookBuilder] Parsed '{parsed_book.title}' by {parsed_book.author} ({len(parsed_book.chapters)} chapters, {parsed_book.total_characters} characters)"
+        )
 
         # Prepare full text chunks per chapter
         all_chunks: List[dict] = []
@@ -60,16 +62,18 @@ class AudiobookBuilder:
             simplified_text = to_simplified(chapter.text)
             chunks = chunk_text(simplified_text, max_chars=self.max_chars)
             for c_text in chunks:
-                all_chunks.append({
-                    "index": global_chunk_idx,
-                    "chapter_index": chapter.index,
-                    "chapter_title": chapter.title,
-                    "characters": len(c_text),
-                    "text": c_text,
-                    "text_sha256": sha256_str(c_text),
-                    "audio": f"chunks/{global_chunk_idx:05d}.wav",
-                    "status": "pending",
-                })
+                all_chunks.append(
+                    {
+                        "index": global_chunk_idx,
+                        "chapter_index": chapter.index,
+                        "chapter_title": chapter.title,
+                        "characters": len(c_text),
+                        "text": c_text,
+                        "text_sha256": sha256_str(c_text),
+                        "audio": f"chunks/{global_chunk_idx:05d}.wav",
+                        "status": "pending",
+                    }
+                )
                 global_chunk_idx += 1
 
         manifest_path = self.output_dir / "manifest.json"
@@ -117,7 +121,9 @@ class AudiobookBuilder:
                     progress_callback(idx, total, f"Skip {idx}/{total}")
                 continue
 
-            print(f"[AudiobookBuilder] START {idx}/{total} chars={len(chunk_text_str)} [{entry.get('chapter_title', '')}]")
+            print(
+                f"[AudiobookBuilder] START {idx}/{total} chars={len(chunk_text_str)} [{entry.get('chapter_title', '')}]"
+            )
             last_err = None
 
             for attempt in range(1, 4):
@@ -137,7 +143,9 @@ class AudiobookBuilder:
                     entry["elapsed_s"] = round(time.monotonic() - started, 2)
                     self._save_manifest(manifest)
 
-                    print(f"[AudiobookBuilder] PASS {idx}/{total} dur={audit['duration_seconds']:.2f}s ({entry['elapsed_s']}s render)")
+                    print(
+                        f"[AudiobookBuilder] PASS {idx}/{total} dur={audit['duration_seconds']:.2f}s ({entry['elapsed_s']}s render)"
+                    )
                     if progress_callback:
                         progress_callback(idx, total, f"Generated chunk {idx}/{total}")
                     break
@@ -194,5 +202,7 @@ class AudiobookBuilder:
             "size_bytes": combined_path.stat().st_size,
             "generated_at": datetime.now(timezone.utc).isoformat(),
         }
-        (self.output_dir / "audit.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (self.output_dir / "audit.json").write_text(
+            json.dumps(audit, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
         return combined_path

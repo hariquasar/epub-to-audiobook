@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """CLI interface for Qwen3-TTS Audiobook Generator."""
+
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 from core import (
-    AudiobookBuilder,
     DEFAULT_MAX_CHARS,
     DEFAULT_SPEAKER,
     STYLE_PRESETS,
+    AudiobookBuilder,
     TTSEngine,
     parse_epub,
 )
@@ -21,13 +21,13 @@ def cmd_parse(args: argparse.Namespace) -> None:
     epub_path = Path(args.epub)
     book = parse_epub(epub_path)
 
-    print(f"\n=======================================================")
+    print("\n=======================================================")
     print(f"📖 Title   : {book.title}")
     print(f"✍️  Author  : {book.author}")
     print(f"🌐 Language: {book.language}")
     print(f"📑 Chapters: {len(book.chapters)}")
     print(f"📝 Total Chars: {book.total_characters:,}")
-    print(f"=======================================================\n")
+    print("=======================================================\n")
 
     for c in book.chapters:
         snippet = c.text.replace("\n", " ")[:60]
@@ -47,6 +47,7 @@ def cmd_preview(args: argparse.Namespace) -> None:
         style_preset=args.style,
     )
     import soundfile as sf
+
     sf.write(str(out_path), audio, sr, subtype="PCM_16")
     print(f"✅ Preview saved to: {out_path} ({audit['duration_seconds']:.2f}s)")
 
@@ -69,6 +70,7 @@ def cmd_generate(args: argparse.Namespace) -> None:
 def cmd_web(args: argparse.Namespace) -> None:
     """Launch the Gradio Web UI."""
     from web_ui import launch_app
+
     launch_app(host=args.host, port=args.port)
 
 
@@ -95,7 +97,9 @@ def main() -> None:
     p_gen.add_argument("--output", "-o", default=None, help="Output directory path")
     p_gen.add_argument("--speaker", default=DEFAULT_SPEAKER, help="Speaker name (default: Uncle_Fu)")
     p_gen.add_argument("--style", default="storyteller", choices=list(STYLE_PRESETS.keys()), help="Style preset")
-    p_gen.add_argument("--max-chars", type=int, default=DEFAULT_MAX_CHARS, help="Max characters per chunk (default: 200)")
+    p_gen.add_argument(
+        "--max-chars", type=int, default=DEFAULT_MAX_CHARS, help="Max characters per chunk (default: 200)"
+    )
     p_gen.set_defaults(func=cmd_generate)
 
     # Web UI command

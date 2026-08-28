@@ -1,9 +1,12 @@
 import json
+from pathlib import Path
+
 import numpy as np
 import soundfile as sf
 import torch
-from pathlib import Path
 from qwen_tts import Qwen3TTSModel
+
+from run_shujian_qwen_customvoice import chunk_text, tighten_silences
 
 MODEL_DIR = Path("/Users/hoyinshum/tools/ai/qwen3-tts/Qwen3-TTS-12Hz-1.7B-CustomVoice")
 SPEAKER = "Uncle_Fu"
@@ -26,7 +29,6 @@ manifest = json.load(open("/Users/hoyinshum/tools/ai/qwen3-tts/shujian_qwen_cust
 chunks = [c["characters"] for c in manifest["chunks"][:3]]
 
 # Read actual chunk text
-from run_shujian_qwen_customvoice import chunk_text, tighten_silences
 source_text = Path("/Users/hoyinshum/tools/ai/qwen3-tts/書劍恩仇錄上_全文.txt").read_text(encoding="utf-8")
 chunk_texts = chunk_text(source_text)[:3]
 
@@ -54,6 +56,6 @@ for i, text in enumerate(chunk_texts, 1):
         audio = audio / peak * 0.90
     out_path = out_dir / f"consistent_{i:02d}.wav"
     sf.write(out_path, audio, sr, subtype="PCM_16")
-    print(f"Saved {out_path} duration={len(audio)/sr:.2f}s peak={np.max(np.abs(audio)):.2f}")
+    print(f"Saved {out_path} duration={len(audio) / sr:.2f}s peak={np.max(np.abs(audio)):.2f}")
 
 print("Done! Test audio files generated in", out_dir)

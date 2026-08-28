@@ -1,4 +1,5 @@
 """Qwen3-TTS Audiobook Generator Core Package."""
+
 from .audiobook_builder import AudiobookBuilder
 from .config import DEFAULT_MAX_CHARS, DEFAULT_MODEL_DIR, DEFAULT_SPEAKER, STYLE_PRESETS
 from .epub_parser import Chapter, ParsedBook, parse_epub

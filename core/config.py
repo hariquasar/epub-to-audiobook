@@ -1,4 +1,5 @@
 """Configuration constants and style templates for Qwen3-TTS Audiobook Generator."""
+
 from __future__ import annotations
 
 from pathlib import Path
