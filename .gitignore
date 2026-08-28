@@ -1,0 +1,34 @@
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Model weights
+Qwen3-TTS-*/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Generated Audio Outputs & Chunks
+shujian_qwen_customvoice_*/
+consistency_test/
+*.wav
+*.flac
+*.mp3
+*.aac
+*.partial.wav
+
+# Logs & Runtime State
+*.log
+*.state.json
+
+# Python cache & OS metadata
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
