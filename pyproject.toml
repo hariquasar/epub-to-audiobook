@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "epub-to-audiobook-qwen3"
+name = "epub-to-audiobook"
 version = "0.1.0"
-description = "Production-grade EPUB to Audiobook pipeline powered by Qwen3-TTS on Apple Silicon"
+description = "Universal EPUB to Audiobook generator with Bring Your Own Model (BYOM) multi-engine architecture"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
@@ -19,6 +19,7 @@ dependencies = [
     "librosa>=0.10.0",
     "numpy>=1.24.0",
     "qwen-tts>=0.1.1",
+    "edge-tts>=7.0.0",
     "transformers>=4.40.0",
     "ebooklib>=0.18",
     "beautifulsoup4>=4.12.0",

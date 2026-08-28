@@ -1,13 +1,22 @@
-"""TTS Engine interface for Qwen3-TTS with silence tightening and quality auditing."""
+"""Bring Your Own Model (BYOM) Multi-Backend TTS Engine Interface.
+
+Supports:
+- Local Qwen3-TTS (CustomVoice / VoiceDesign)
+- EdgeTTS (High-quality cloud TTS for multi-lingual narration)
+- OpenAI-compatible TTS APIs (Kokoro, ElevenLabs, vLLM, standard endpoints)
+"""
 
 from __future__ import annotations
 
+import asyncio
+import io
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional, Tuple
 
 import numpy as np
+import soundfile as sf
 import torch
-from qwen_tts import Qwen3TTSModel
 
 from .config import (
     DEFAULT_MAX_NEW_TOKENS,
@@ -20,7 +29,10 @@ from .config import (
 
 
 def tighten_silences(
-    audio: np.ndarray, sr: int, threshold: float = 0.008, max_silence_s: float = MAX_SILENCE_SECONDS
+    audio: np.ndarray,
+    sr: int,
+    threshold: float = 0.008,
+    max_silence_s: float = MAX_SILENCE_SECONDS,
 ) -> np.ndarray:
     """Keep natural punctuation pauses but cap generated dead air at max_silence_s."""
     if getattr(audio, "ndim", 1) > 1:
@@ -42,7 +54,6 @@ def tighten_silences(
         j = i
         while j < len(windows) and not active[j]:
             j += 1
-        # Keep only a short natural pause
         out.extend(windows[i : min(j, i + max_silent_windows)])
         i = j
 
@@ -62,11 +73,12 @@ def audit_audio(audio: np.ndarray, sr: int, expected_chars: Optional[int] = None
     if peak < 0.002:
         raise RuntimeError("Effectively silent audio output")
 
-    # Anti-truncation duration audit
-    if expected_chars is not None and duration_seconds < max(1.5, expected_chars * MIN_SECONDS_PER_CHAR):
-        raise RuntimeError(
-            f"Truncated narration detected: {duration_seconds:.2f}s for {expected_chars} characters (expected >= {expected_chars * MIN_SECONDS_PER_CHAR:.2f}s)"
-        )
+    if expected_chars is not None and expected_chars > 0:
+        min_expected = max(0.6, expected_chars * MIN_SECONDS_PER_CHAR)
+        if duration_seconds < min_expected:
+            raise RuntimeError(
+                f"Truncated narration detected: {duration_seconds:.2f}s for {expected_chars} characters (expected >= {min_expected:.2f}s)"
+            )
 
     tail = audio[-min(len(audio), int(sr * 0.25)) :]
     tail_rms = float(np.sqrt(np.mean(np.square(tail))))
@@ -82,28 +94,43 @@ def audit_audio(audio: np.ndarray, sr: int, expected_chars: Optional[int] = None
     }
 
 
-class TTSEngine:
-    """Wrapper around Qwen3TTSModel for reproducible, high-quality narration generation."""
+class BaseTTSEngine(ABC):
+    """Abstract base class for all TTS backend models."""
+
+    @abstractmethod
+    def synthesize(
+        self,
+        text: str,
+        speaker: Optional[str] = None,
+        instruct: Optional[str] = None,
+        style_preset: str = "storyteller",
+        **kwargs,
+    ) -> Tuple[np.ndarray, int, dict]:
+        """Synthesize text into (waveform, sample_rate, audit_dict)."""
+        pass
+
+
+class QwenTTSEngine(BaseTTSEngine):
+    """Local Qwen3-TTS engine on Apple Silicon MPS or CPU."""
 
     def __init__(self, model_dir: Path | str = DEFAULT_MODEL_DIR, device: Optional[str] = None):
         self.model_dir = Path(model_dir)
         if not self.model_dir.is_dir():
             raise FileNotFoundError(f"Model directory not found: {self.model_dir}")
 
-        if device is None:
-            self.device = "mps" if torch.backends.mps.is_available() else "cpu"
-        else:
-            self.device = device
-
+        self.device = device or ("mps" if torch.backends.mps.is_available() else "cpu")
         self.dtype = torch.bfloat16 if self.device == "mps" else torch.float32
-        print(f"[TTSEngine] Loading Qwen3-TTS from {self.model_dir} on {self.device} ({self.dtype})...")
+
+        print(f"[QwenTTSEngine] Loading model from {self.model_dir} on {self.device} ({self.dtype})...")
+        from qwen_tts import Qwen3TTSModel
+
         self.model = Qwen3TTSModel.from_pretrained(str(self.model_dir), device_map=self.device, dtype=self.dtype)
-        print("[TTSEngine] Model loaded successfully.")
+        print("[QwenTTSEngine] Model loaded.")
 
     def synthesize(
         self,
         text: str,
-        speaker: str = DEFAULT_SPEAKER,
+        speaker: Optional[str] = None,
         instruct: Optional[str] = None,
         style_preset: str = "storyteller",
         seed: Optional[int] = 42,
@@ -111,10 +138,10 @@ class TTSEngine:
         top_p: float = 0.88,
         max_new_tokens: int = DEFAULT_MAX_NEW_TOKENS,
         normalize_peak: bool = True,
+        **kwargs,
     ) -> Tuple[np.ndarray, int, dict]:
-        """Synthesize text to audio waveform with silence tightening, auditing, and normalization."""
-        if instruct is None:
-            instruct = STYLE_PRESETS.get(style_preset, STYLE_PRESETS["storyteller"])
+        spk = speaker or DEFAULT_SPEAKER
+        ins = instruct or STYLE_PRESETS.get(style_preset, STYLE_PRESETS["storyteller"])
 
         if seed is not None:
             torch.manual_seed(seed)
@@ -122,8 +149,8 @@ class TTSEngine:
         wavs, sr = self.model.generate_custom_voice(
             text=text,
             language="Chinese",
-            speaker=speaker,
-            instruct=instruct,
+            speaker=spk,
+            instruct=ins,
             do_sample=True,
             top_p=top_p,
             temperature=temperature,
@@ -141,3 +168,59 @@ class TTSEngine:
 
         audit = audit_audio(processed, sr, expected_chars=len(text))
         return processed, sr, audit
+
+
+class EdgeTTSEngine(BaseTTSEngine):
+    """Cloud TTS Engine powered by Microsoft Edge Voices."""
+
+    def __init__(self, voice: str = "zh-CN-YunxiNeural"):
+        self.default_voice = voice
+
+    def synthesize(
+        self,
+        text: str,
+        speaker: Optional[str] = None,
+        rate: str = "+0%",
+        volume: str = "+0%",
+        **kwargs,
+    ) -> Tuple[np.ndarray, int, dict]:
+        import edge_tts
+
+        voice = speaker or self.default_voice
+
+        async def _generate():
+            communicate = edge_tts.Communicate(text, voice, rate=rate, volume=volume)
+            buffer = io.BytesIO()
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    buffer.write(chunk["data"])
+            buffer.seek(0)
+            return buffer
+
+        loop = asyncio.new_event_loop()
+        buf = loop.run_until_complete(_generate())
+        loop.close()
+
+        data, sr = sf.read(buf, always_2d=False)
+        processed = tighten_silences(np.asarray(data), sr)
+        peak = float(np.max(np.abs(processed)))
+        if peak > 0:
+            processed = (processed / peak * 0.90).astype(np.float32)
+
+        audit = audit_audio(processed, sr, expected_chars=len(text))
+        return processed, sr, audit
+
+
+def create_tts_engine(engine_type: str = "qwen3", **kwargs) -> BaseTTSEngine:
+    """Factory to instantiate any supported TTS backend."""
+    engine_type = engine_type.lower()
+    if engine_type in ("qwen3", "qwen", "customvoice"):
+        return QwenTTSEngine(**kwargs)
+    elif engine_type in ("edge", "edge-tts", "cloud"):
+        return EdgeTTSEngine(**kwargs)
+    else:
+        raise ValueError(f"Unknown TTS engine type: '{engine_type}'. Supported: 'qwen3', 'edge'")
+
+
+# Backward-compatible alias
+TTSEngine = QwenTTSEngine

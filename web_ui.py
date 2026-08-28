@@ -1,4 +1,4 @@
-"""Gradio Web Interface for Qwen3-TTS EPUB Audiobook Generator."""
+"""Gradio Web Interface for Universal EPUB Audiobook Generator (BYOM Architecture)."""
 
 from __future__ import annotations
 
@@ -12,19 +12,20 @@ import soundfile as sf
 from core import (
     STYLE_PRESETS,
     AudiobookBuilder,
-    TTSEngine,
+    BaseTTSEngine,
+    create_tts_engine,
     parse_epub,
 )
 
-# Global cached engine to avoid reloading model on every button click
-_ENGINE: Optional[TTSEngine] = None
+# Engine cache
+_ENGINES: dict[str, BaseTTSEngine] = {}
 
 
-def get_engine() -> TTSEngine:
-    global _ENGINE
-    if _ENGINE is None:
-        _ENGINE = TTSEngine()
-    return _ENGINE
+def get_engine(engine_type: str) -> BaseTTSEngine:
+    global _ENGINES
+    if engine_type not in _ENGINES:
+        _ENGINES[engine_type] = create_tts_engine(engine_type)
+    return _ENGINES[engine_type]
 
 
 def inspect_epub(epub_file: Optional[str]) -> str:
@@ -54,12 +55,12 @@ def inspect_epub(epub_file: Optional[str]) -> str:
         return f"❌ Error reading EPUB: {exc}"
 
 
-def preview_voice(text: str, speaker: str, style_preset: str) -> Optional[str]:
+def preview_voice(text: str, engine_choice: str, speaker: str, style_preset: str) -> Optional[str]:
     """Generate a quick voice audition."""
     if not text.strip():
         text = "清乾隆十八年六月，陕西扶风延绥镇总兵衙门内院，一个十四岁的女孩儿跳跳蹦蹦的走向教书先生书房。"
     try:
-        engine = get_engine()
+        engine = get_engine(engine_choice)
         audio, sr, audit = engine.synthesize(
             text=text,
             speaker=speaker,
@@ -75,6 +76,7 @@ def preview_voice(text: str, speaker: str, style_preset: str) -> Optional[str]:
 
 def generate_audiobook(
     epub_file: Optional[str],
+    engine_choice: str,
     speaker: str,
     style_preset: str,
     custom_style: str,
@@ -90,7 +92,7 @@ def generate_audiobook(
         output_dir = Path("./audiobook_outputs") / epub_path.stem
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        engine = get_engine()
+        engine = get_engine(engine_choice)
         builder = AudiobookBuilder(
             output_dir=output_dir,
             engine=engine,
@@ -109,12 +111,35 @@ def generate_audiobook(
         return None, f"❌ Failed to generate audiobook: {exc}"
 
 
+def update_speaker_choices(engine_choice: str):
+    if engine_choice == "edge":
+        return gr.Dropdown(
+            choices=[
+                "zh-CN-YunxiNeural",
+                "zh-CN-YunjianNeural",
+                "zh-CN-XiaoxiaoNeural",
+                "zh-HK-HiuGaaiNeural",
+                "zh-TW-HsiaoChenNeural",
+                "en-US-GuyNeural",
+                "en-US-JennyNeural",
+            ],
+            value="zh-CN-YunxiNeural",
+        )
+    else:
+        return gr.Dropdown(
+            choices=["Uncle_Fu", "Aiden", "Seraphina"],
+            value="Uncle_Fu",
+        )
+
+
 def create_ui() -> gr.Blocks:
-    with gr.Blocks(title="Qwen3-TTS EPUB Audiobook Generator", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="Universal EPUB Audiobook Studio", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             """
-            # 🎙️ Qwen3-TTS EPUB Audiobook Generator
-            Upload an **EPUB eBook** and generate high-fidelity Chinese audiobooks using Alibaba's `Qwen3-TTS-12Hz-1.7B-CustomVoice` with Apple Silicon GPU acceleration.
+            # 🎙️ Universal EPUB Audiobook Studio (BYOM)
+            Upload any **EPUB eBook** and generate complete, high-fidelity audiobooks with your choice of TTS engine:
+            - **Local Qwen3-TTS**: High-emotion storytelling with Apple Silicon GPU (MPS) acceleration.
+            - **Cloud EdgeTTS**: High-speed, multi-lingual crystal clear narration.
             """
         )
 
@@ -126,8 +151,14 @@ def create_ui() -> gr.Blocks:
                     type="filepath",
                 )
 
+                engine_select = gr.Radio(
+                    label="TTS Engine Backend (Bring Your Own Model)",
+                    choices=[("Local Qwen3-TTS (1.7B)", "qwen3"), ("Cloud EdgeTTS (Multi-Lingual)", "edge")],
+                    value="qwen3",
+                )
+
                 speaker_select = gr.Dropdown(
-                    label="Narrator Speaker",
+                    label="Narrator Speaker / Voice",
                     choices=["Uncle_Fu", "Aiden", "Seraphina"],
                     value="Uncle_Fu",
                 )
@@ -164,14 +195,15 @@ def create_ui() -> gr.Blocks:
 
         # Event triggers
         epub_input.change(fn=inspect_epub, inputs=[epub_input], outputs=[epub_info])
+        engine_select.change(fn=update_speaker_choices, inputs=[engine_select], outputs=[speaker_select])
         preview_btn.click(
             fn=preview_voice,
-            inputs=[custom_style, speaker_select, style_preset],
+            inputs=[custom_style, engine_select, speaker_select, style_preset],
             outputs=[preview_audio],
         )
         generate_btn.click(
             fn=generate_audiobook,
-            inputs=[epub_input, speaker_select, style_preset, custom_style, max_chars_slider],
+            inputs=[epub_input, engine_select, speaker_select, style_preset, custom_style, max_chars_slider],
             outputs=[output_audio, status_text],
         )
 

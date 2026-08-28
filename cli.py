@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI interface for Qwen3-TTS Audiobook Generator."""
+"""CLI interface for Universal EPUB Audiobook Generator (BYOM Architecture)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from core import (
     DEFAULT_SPEAKER,
     STYLE_PRESETS,
     AudiobookBuilder,
-    TTSEngine,
+    create_tts_engine,
     parse_epub,
 )
 
@@ -36,11 +36,11 @@ def cmd_parse(args: argparse.Namespace) -> None:
 
 def cmd_preview(args: argparse.Namespace) -> None:
     """Generate a quick voice audition sample."""
-    engine = TTSEngine()
+    engine = create_tts_engine(args.engine)
     text = args.text or "清乾隆十八年六月，陕西扶风延绥镇总兵衙门内院，一个十四岁的女孩儿跳跳蹦蹦的走向教书先生书房。"
     out_path = Path(args.output)
 
-    print(f"Generating preview for text: {text}")
+    print(f"Generating preview with engine '{args.engine}' for text: {text}")
     audio, sr, audit = engine.synthesize(
         text=text,
         speaker=args.speaker,
@@ -49,7 +49,7 @@ def cmd_preview(args: argparse.Namespace) -> None:
     import soundfile as sf
 
     sf.write(str(out_path), audio, sr, subtype="PCM_16")
-    print(f"✅ Preview saved to: {out_path} ({audit['duration_seconds']:.2f}s)")
+    print(f"✅ Preview saved to: {out_path} ({audit['duration_seconds']:.2f}s, sr={sr})")
 
 
 def cmd_generate(args: argparse.Namespace) -> None:
@@ -57,8 +57,10 @@ def cmd_generate(args: argparse.Namespace) -> None:
     epub_path = Path(args.epub)
     output_dir = Path(args.output or f"./output_{epub_path.stem}")
 
+    engine = create_tts_engine(args.engine)
     builder = AudiobookBuilder(
         output_dir=output_dir,
+        engine=engine,
         speaker=args.speaker,
         style_preset=args.style,
         max_chars=args.max_chars,
@@ -75,7 +77,7 @@ def cmd_web(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Qwen3-TTS EPUB Audiobook Generator")
+    parser = argparse.ArgumentParser(description="Universal EPUB Audiobook Generator (BYOM)")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Parse command
@@ -85,8 +87,9 @@ def main() -> None:
 
     # Preview command
     p_prev = subparsers.add_parser("preview", help="Generate a quick voice sample")
+    p_prev.add_argument("--engine", default="qwen3", choices=["qwen3", "edge"], help="TTS Engine backend")
     p_prev.add_argument("--text", default=None, help="Text to synthesize for preview")
-    p_prev.add_argument("--speaker", default=DEFAULT_SPEAKER, help="Speaker name (default: Uncle_Fu)")
+    p_prev.add_argument("--speaker", default=DEFAULT_SPEAKER, help="Speaker / Voice name")
     p_prev.add_argument("--style", default="storyteller", choices=list(STYLE_PRESETS.keys()), help="Style preset")
     p_prev.add_argument("--output", default="audition.wav", help="Output WAV path")
     p_prev.set_defaults(func=cmd_preview)
@@ -94,8 +97,9 @@ def main() -> None:
     # Generate command
     p_gen = subparsers.add_parser("generate", help="Generate complete audiobook from EPUB")
     p_gen.add_argument("epub", help="Path to the .epub file")
+    p_gen.add_argument("--engine", default="qwen3", choices=["qwen3", "edge"], help="TTS Engine backend")
     p_gen.add_argument("--output", "-o", default=None, help="Output directory path")
-    p_gen.add_argument("--speaker", default=DEFAULT_SPEAKER, help="Speaker name (default: Uncle_Fu)")
+    p_gen.add_argument("--speaker", default=DEFAULT_SPEAKER, help="Speaker / Voice name")
     p_gen.add_argument("--style", default="storyteller", choices=list(STYLE_PRESETS.keys()), help="Style preset")
     p_gen.add_argument(
         "--max-chars", type=int, default=DEFAULT_MAX_CHARS, help="Max characters per chunk (default: 200)"
