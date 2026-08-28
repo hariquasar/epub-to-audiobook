@@ -43,18 +43,25 @@ pip install -r requirements.txt
 python cli.py parse path/to/book.epub
 ```
 
-### Preview Voice Sample (Choose Backend Engine)
+### Preview Voice Sample (Choose Genre & Engine)
 ```bash
-# Using local Qwen3-TTS
-python cli.py preview --engine qwen3 --speaker Uncle_Fu --style storyteller
+# Fiction (Storyteller / Novel)
+python cli.py preview --genre fiction --engine qwen3 --speaker Uncle_Fu
+
+# Non-Fiction (Business / Documentary / Knowledge)
+python cli.py preview --genre nonfiction --engine qwen3 --speaker Uncle_Fu
 
 # Using Cloud EdgeTTS (Free, fast, multi-lingual)
-python cli.py preview --engine edge --speaker zh-CN-YunxiNeural
+python cli.py preview --genre nonfiction --engine edge --speaker zh-CN-YunxiNeural
 ```
 
 ### Generate Complete Audiobook from EPUB
 ```bash
-python cli.py generate path/to/book.epub --engine qwen3 --output ./dist/my_audiobook
+# Fiction novel with immersive storytelling rhythm
+python cli.py generate path/to/novel.epub --genre fiction --engine qwen3 --output ./dist/novel
+
+# Non-fiction business/history book with crisp cadence
+python cli.py generate path/to/business.epub --genre nonfiction --engine qwen3 --output ./dist/business
 ```
 
 ---

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI interface for Universal EPUB Audiobook Generator (BYOM Architecture)."""
+"""CLI interface for Universal EPUB Audiobook Generator (BYOM & Genre-Aware)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from pathlib import Path
 from core import (
     DEFAULT_MAX_CHARS,
     DEFAULT_SPEAKER,
+    GENRE_CONFIGS,
     STYLE_PRESETS,
     AudiobookBuilder,
     create_tts_engine,
@@ -37,17 +38,19 @@ def cmd_parse(args: argparse.Namespace) -> None:
 def cmd_preview(args: argparse.Namespace) -> None:
     """Generate a quick voice audition sample."""
     engine = create_tts_engine(args.engine)
+    genre_conf = GENRE_CONFIGS.get(args.genre, GENRE_CONFIGS["fiction"])
+    style = args.style or genre_conf["default_style"]
     text = (
         args.text
         or "这是一个通用的有声书测试样本。欢迎使用自备模型有声书制作工作台，体验流畅自然的多语种旁白与说书人音色。"
     )
     out_path = Path(args.output)
 
-    print(f"Generating preview with engine '{args.engine}' for text: {text}")
+    print(f"Generating preview [Genre: {args.genre}, Style: {style}, Engine: {args.engine}] for text: {text}")
     audio, sr, audit = engine.synthesize(
         text=text,
         speaker=args.speaker,
-        style_preset=args.style,
+        style_preset=style,
     )
     import soundfile as sf
 
@@ -56,20 +59,23 @@ def cmd_preview(args: argparse.Namespace) -> None:
 
 
 def cmd_generate(args: argparse.Namespace) -> None:
-    """Generate an audiobook from an EPUB file."""
+    """Generate an audiobook from an EPUB file with genre-specific tuning."""
     epub_path = Path(args.epub)
     output_dir = Path(args.output or f"./output_{epub_path.stem}")
+
+    genre_conf = GENRE_CONFIGS.get(args.genre, GENRE_CONFIGS["fiction"])
+    style = args.style or genre_conf["default_style"]
 
     engine = create_tts_engine(args.engine)
     builder = AudiobookBuilder(
         output_dir=output_dir,
         engine=engine,
         speaker=args.speaker,
-        style_preset=args.style,
+        style_preset=style,
         max_chars=args.max_chars,
     )
     final_file = builder.build_from_epub(epub_path)
-    print(f"\n🎉 Audiobook generated successfully: {final_file}\n")
+    print(f"\n🎉 Audiobook generated successfully [{args.genre.upper()}]: {final_file}\n")
 
 
 def cmd_web(args: argparse.Namespace) -> None:
@@ -80,7 +86,7 @@ def cmd_web(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Universal EPUB Audiobook Generator (BYOM)")
+    parser = argparse.ArgumentParser(description="Universal EPUB Audiobook Generator (BYOM & Genre-Aware)")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Parse command
@@ -90,20 +96,24 @@ def main() -> None:
 
     # Preview command
     p_prev = subparsers.add_parser("preview", help="Generate a quick voice sample")
+    p_prev.add_argument("--genre", choices=["fiction", "nonfiction"], default="fiction", help="Book genre")
     p_prev.add_argument("--engine", default="qwen3", choices=["qwen3", "edge"], help="TTS Engine backend")
     p_prev.add_argument("--text", default=None, help="Text to synthesize for preview")
     p_prev.add_argument("--speaker", default=DEFAULT_SPEAKER, help="Speaker / Voice name")
-    p_prev.add_argument("--style", default="storyteller", choices=list(STYLE_PRESETS.keys()), help="Style preset")
+    p_prev.add_argument("--style", default=None, choices=list(STYLE_PRESETS.keys()), help="Style preset override")
     p_prev.add_argument("--output", default="audition.wav", help="Output WAV path")
     p_prev.set_defaults(func=cmd_preview)
 
     # Generate command
     p_gen = subparsers.add_parser("generate", help="Generate complete audiobook from EPUB")
     p_gen.add_argument("epub", help="Path to the .epub file")
+    p_gen.add_argument(
+        "--genre", choices=["fiction", "nonfiction"], default="fiction", help="Book genre (fiction/nonfiction)"
+    )
     p_gen.add_argument("--engine", default="qwen3", choices=["qwen3", "edge"], help="TTS Engine backend")
     p_gen.add_argument("--output", "-o", default=None, help="Output directory path")
     p_gen.add_argument("--speaker", default=DEFAULT_SPEAKER, help="Speaker / Voice name")
-    p_gen.add_argument("--style", default="storyteller", choices=list(STYLE_PRESETS.keys()), help="Style preset")
+    p_gen.add_argument("--style", default=None, choices=list(STYLE_PRESETS.keys()), help="Style preset override")
     p_gen.add_argument(
         "--max-chars", type=int, default=DEFAULT_MAX_CHARS, help="Max characters per chunk (default: 200)"
     )

@@ -1,4 +1,4 @@
-"""Gradio Web Interface for Universal EPUB Audiobook Generator (BYOM Architecture)."""
+"""Gradio Web Interface for Universal EPUB Audiobook Generator (BYOM & Genre-Aware)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ import gradio as gr
 import soundfile as sf
 
 from core import (
-    STYLE_PRESETS,
+    FICTION_PRESETS,
+    NONFICTION_PRESETS,
     AudiobookBuilder,
     BaseTTSEngine,
     create_tts_engine,
@@ -76,6 +77,7 @@ def preview_voice(text: str, engine_choice: str, speaker: str, style_preset: str
 
 def generate_audiobook(
     epub_file: Optional[str],
+    genre_choice: str,
     engine_choice: str,
     speaker: str,
     style_preset: str,
@@ -106,9 +108,25 @@ def generate_audiobook(
             progress(curr / max(total, 1), desc=status_msg)
 
         final_flac = builder.build_from_epub(epub_path, progress_callback=progress_tracker)
-        return str(final_flac), f"✅ Completed! Master audiobook saved to: {final_flac}"
+        return str(final_flac), f"✅ Completed [{genre_choice.upper()}]! Master audiobook saved to: {final_flac}"
     except Exception as exc:
         return None, f"❌ Failed to generate audiobook: {exc}"
+
+
+def update_genre_styles(genre: str):
+    """Dynamically switch style presets based on genre."""
+    if genre == "nonfiction":
+        return gr.Dropdown(
+            choices=list(NONFICTION_PRESETS.keys()),
+            value="nonfiction_business",
+            label="Narration Style (Non-Fiction / 商业科普经管)",
+        )
+    else:
+        return gr.Dropdown(
+            choices=list(FICTION_PRESETS.keys()),
+            value="fiction_storyteller",
+            label="Narration Style (Fiction / 虚构小说武侠)",
+        )
 
 
 def update_speaker_choices(engine_choice: str):
@@ -136,10 +154,8 @@ def create_ui() -> gr.Blocks:
     with gr.Blocks(title="Universal EPUB Audiobook Studio", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             """
-            # 🎙️ Universal EPUB Audiobook Studio (BYOM)
-            Upload any **EPUB eBook** and generate complete, high-fidelity audiobooks with your choice of TTS engine:
-            - **Local Qwen3-TTS**: High-emotion storytelling with Apple Silicon GPU (MPS) acceleration.
-            - **Cloud EdgeTTS**: High-speed, multi-lingual crystal clear narration.
+            # 🎙️ Universal EPUB Audiobook Studio (BYOM & Genre-Aware)
+            Upload any **EPUB eBook** and generate complete, high-fidelity audiobooks with specialized tuning for **Fiction (小说)** and **Non-Fiction (商业/社科/科普)**.
             """
         )
 
@@ -149,6 +165,15 @@ def create_ui() -> gr.Blocks:
                     label="Upload EPUB eBook",
                     file_types=[".epub"],
                     type="filepath",
+                )
+
+                genre_select = gr.Radio(
+                    label="📚 Book Genre (书籍类型)",
+                    choices=[
+                        ("Fiction (小说 / 故事 / 武侠)", "fiction"),
+                        ("Non-Fiction (商业 / 经管 / 历史 / 知识)", "nonfiction"),
+                    ],
+                    value="fiction",
                 )
 
                 engine_select = gr.Radio(
@@ -164,9 +189,9 @@ def create_ui() -> gr.Blocks:
                 )
 
                 style_preset = gr.Dropdown(
-                    label="Narration Style Preset",
-                    choices=list(STYLE_PRESETS.keys()),
-                    value="storyteller",
+                    label="Narration Style (Fiction / 虚构小说武侠)",
+                    choices=list(FICTION_PRESETS.keys()),
+                    value="fiction_storyteller",
                 )
 
                 custom_style = gr.Textbox(
@@ -191,10 +216,11 @@ def create_ui() -> gr.Blocks:
             with gr.Column(scale=1):
                 epub_info = gr.Markdown("Upload an EPUB file to inspect chapter structure and character counts.")
                 status_text = gr.Textbox(label="Status / Output", interactive=False)
-                output_audio = gr.File(label="Download Master Audiobook (.flac)")
+                output_audio = gr.File(label="Download Master Audiobook (.flac / .m4b)")
 
         # Event triggers
         epub_input.change(fn=inspect_epub, inputs=[epub_input], outputs=[epub_info])
+        genre_select.change(fn=update_genre_styles, inputs=[genre_select], outputs=[style_preset])
         engine_select.change(fn=update_speaker_choices, inputs=[engine_select], outputs=[speaker_select])
         preview_btn.click(
             fn=preview_voice,
@@ -203,7 +229,15 @@ def create_ui() -> gr.Blocks:
         )
         generate_btn.click(
             fn=generate_audiobook,
-            inputs=[epub_input, engine_select, speaker_select, style_preset, custom_style, max_chars_slider],
+            inputs=[
+                epub_input,
+                genre_select,
+                engine_select,
+                speaker_select,
+                style_preset,
+                custom_style,
+                max_chars_slider,
+            ],
             outputs=[output_audio, status_text],
         )
 
