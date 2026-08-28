@@ -10,19 +10,19 @@ def test_clean_html_text():
     <html>
       <head><style>p { color: red; }</style></head>
       <body>
-        <h1>第一回 古道腾驹惊白发</h1>
-        <p>清乾隆十八年六月，陕西扶风延绥镇总兵衙门内院。</p>
-        <p>一个十四岁的女孩儿跳跳蹦蹦的走向教书先生书房。</p>
+        <h1>第一章 冒险的开端</h1>
+        <p>在一个风和日丽的早晨，探险队员们整装待发。</p>
+        <p>年轻的队员背起行囊，快步走向集合大厅。</p>
         <script>console.log('remove me');</script>
       </body>
     </html>
     """
     title, text = clean_html_text(html)
-    assert "第一回 古道腾驹惊白发" in title
+    assert "第一章 冒险的开端" in title
     assert "console.log" not in text
     assert "color: red" not in text
-    assert "清乾隆十八年六月" in text
-    assert "十四岁的女孩儿" in text
+    assert "在一个风和日丽的早晨" in text
+    assert "年轻的队员" in text
 
 
 def test_parse_epub_not_found():

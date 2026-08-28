@@ -17,20 +17,20 @@ def test_split_sentences_basic():
 
 
 def test_split_sentences_closing_quotes():
-    text = "李沅芷大叫：「老师，你教我这玩意儿！」陆高止微笑道：「明天教你。」李沅芷道：「一言为定！」"
+    text = "张明大叫：「小华，你教我这招！」李老师微笑道：「明天教你。」张明道：「一言为定！」"
     sentences = split_sentences(text)
     assert "".join(sentences) == text
     # Ensure quotes are not detached
-    assert sentences[0] == "李沅芷大叫：「老师，你教我这玩意儿！」"
-    assert sentences[1] == "陆高止微笑道：「明天教你。」"
-    assert sentences[2] == "李沅芷道：「一言为定！」"
+    assert sentences[0] == "张明大叫：「小华，你教我这招！」"
+    assert sentences[1] == "李老师微笑道：「明天教你。」"
+    assert sentences[2] == "张明道：「一言为定！」"
 
 
 def test_chunk_text_preserves_sentences():
     text = (
-        "清乾隆十八年六月，陕西扶风延绥镇总兵衙门内院，一个十四岁的女孩儿跳跳蹦蹦的走向教书先生书房。"
-        "上午老师讲完了《资治通鉴》上「赤壁之战」的一段书，随口讲了些诸葛亮、周瑜的故事。"
-        "午后本来没功课，那女孩儿却兴犹未尽，要老师再讲三国故事。"
+        "这是一个阳光明媚的早晨，小镇街道上行人熙熙攘攘。"
+        "图书馆里陈列着各式各样的历史典籍，记录着过去岁月的故事。"
+        "午后阳光透过落地窗洒在书桌上，让人感到格外宁静与舒适。"
     )
     chunks = chunk_text(text, max_chars=100)
     assert "".join(chunks) == text

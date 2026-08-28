@@ -37,7 +37,10 @@ def cmd_parse(args: argparse.Namespace) -> None:
 def cmd_preview(args: argparse.Namespace) -> None:
     """Generate a quick voice audition sample."""
     engine = create_tts_engine(args.engine)
-    text = args.text or "清乾隆十八年六月，陕西扶风延绥镇总兵衙门内院，一个十四岁的女孩儿跳跳蹦蹦的走向教书先生书房。"
+    text = (
+        args.text
+        or "这是一个通用的有声书测试样本。欢迎使用自备模型有声书制作工作台，体验流畅自然的多语种旁白与说书人音色。"
+    )
     out_path = Path(args.output)
 
     print(f"Generating preview with engine '{args.engine}' for text: {text}")

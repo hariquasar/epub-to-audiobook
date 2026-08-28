@@ -58,7 +58,7 @@ def inspect_epub(epub_file: Optional[str]) -> str:
 def preview_voice(text: str, engine_choice: str, speaker: str, style_preset: str) -> Optional[str]:
     """Generate a quick voice audition."""
     if not text.strip():
-        text = "清乾隆十八年六月，陕西扶风延绥镇总兵衙门内院，一个十四岁的女孩儿跳跳蹦蹦的走向教书先生书房。"
+        text = "这是一个通用的有声书测试样本。欢迎使用自备模型有声书制作工作台，体验流畅自然的多语种旁白与说书人音色。"
     try:
         engine = get_engine(engine_choice)
         audio, sr, audit = engine.synthesize(

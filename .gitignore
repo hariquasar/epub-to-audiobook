@@ -22,6 +22,12 @@ consistency_test/
 *.aac
 *.partial.wav
 
+# Local Book Sources & Generation Data
+書劍*
+shujian*
+run_shujian*
+test_consistency.py
+
 # Logs & Runtime State
 *.log
 *.state.json
