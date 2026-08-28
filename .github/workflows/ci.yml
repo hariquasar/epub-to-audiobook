@@ -47,8 +47,11 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install pytest numpy soundfile ebooklib beautifulsoup4 opencc-python-reimplemented gradio
+          python -m pip install --upgrade pip
+          pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install pytest numpy soundfile ebooklib beautifulsoup4 opencc-python-reimplemented gradio edge-tts
+          pip install -e .
 
       - name: Run Pytest Suite
         run: |
-          pytest -v tests/
+          PYTHONPATH=. pytest -v tests/
