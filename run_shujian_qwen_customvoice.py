@@ -173,16 +173,16 @@ def open_project(source: Path, project: Path) -> tuple[dict, list[str]]:
     return m, chunks
 
 
-def tighten_silences(audio: np.ndarray, sr: int, threshold: float = 0.008) -> np.ndarray:
-    """Keep natural punctuation pauses but cap generated dead air at 0.30 s."""
+def tighten_silences(audio: np.ndarray, sr: int, threshold: float = 0.003, max_silence_s: float = 0.30) -> np.ndarray:
+    """Keep natural punctuation pauses but cap generated dead air at max_silence_s while preserving word tails."""
     if getattr(audio, "ndim", 1) > 1:
         audio = audio.mean(axis=1)
-    window = max(1, int(sr * 0.05))
+    window = max(1, int(sr * 0.04))
     windows = [audio[i : i + window] for i in range(0, len(audio), window)]
     active = [np.sqrt(np.mean(np.square(w))) >= threshold for w in windows]
     out: list[np.ndarray] = []
     i = 0
-    max_silent_windows = 6  # 0.30 seconds
+    max_silent_windows = max(1, int(max_silence_s / 0.04))
     while i < len(windows):
         if active[i]:
             out.append(windows[i])
@@ -191,10 +191,13 @@ def tighten_silences(audio: np.ndarray, sr: int, threshold: float = 0.008) -> np
         j = i
         while j < len(windows) and not active[j]:
             j += 1
-        # Keep only a short natural pause, including at the beginning/end.
+        # Keep only a short natural pause
         out.extend(windows[i : min(j, i + max_silent_windows)])
         i = j
-    return np.concatenate(out) if out else audio
+    res = np.concatenate(out) if out else audio
+    # Ensure a clean 300ms tail silence buffer so final word release is never clipped
+    tail_pad = np.zeros(int(sr * 0.30), dtype=res.dtype)
+    return np.concatenate([res, tail_pad])
 
 
 def audit_wav(path: Path, expected_chars: int | None = None) -> dict:
@@ -211,6 +214,10 @@ def audit_wav(path: Path, expected_chars: int | None = None) -> dict:
     duration_seconds = len(audio) / sr
     if expected_chars is not None and duration_seconds < max(1.5, expected_chars * 0.14):
         raise RuntimeError(f"truncated narration: {duration_seconds:.2f}s for {expected_chars} characters")
+    # Check if audio was cut off abruptly while speaking
+    last_30ms_peak = float(np.max(np.abs(audio[-int(sr * 0.030) :])))
+    if last_30ms_peak > 0.03:
+        raise RuntimeError(f"Narration cut off abruptly at end (last 30ms peak={last_30ms_peak:.3f})")
     tail = audio[-min(len(audio), int(sr * 0.25)) :]
     tail_rms = float(np.sqrt(np.mean(np.square(tail))))
     if tail_rms > 0.20:
@@ -269,8 +276,8 @@ def main() -> None:
                     do_sample=True,
                     top_p=0.88,
                     temperature=0.62,
-                    repetition_penalty=1.07,
-                    max_new_tokens=700,
+                    repetition_penalty=1.05,
+                    max_new_tokens=1200,
                 )
                 processed = tighten_silences(np.asarray(wavs[0]), sr)
                 tmp = p.with_suffix(".partial.wav")

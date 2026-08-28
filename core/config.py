@@ -17,8 +17,8 @@ MIN_SECONDS_PER_CHAR = 0.14
 # Maximum allowed silence duration between sentences in seconds
 MAX_SILENCE_SECONDS = 0.30
 
-# Maximum audio token generation limit
-DEFAULT_MAX_NEW_TOKENS = 700
+# Maximum audio token generation limit (allows up to ~90s speech per chunk)
+DEFAULT_MAX_NEW_TOKENS = 1200
 
 # Preset style templates for narration
 STYLE_PRESETS = {

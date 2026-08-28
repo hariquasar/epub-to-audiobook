@@ -31,20 +31,20 @@ from .config import (
 def tighten_silences(
     audio: np.ndarray,
     sr: int,
-    threshold: float = 0.008,
+    threshold: float = 0.003,
     max_silence_s: float = MAX_SILENCE_SECONDS,
 ) -> np.ndarray:
-    """Keep natural punctuation pauses but cap generated dead air at max_silence_s."""
+    """Keep natural punctuation pauses but cap generated dead air at max_silence_s while preserving word tails."""
     if getattr(audio, "ndim", 1) > 1:
         audio = audio.mean(axis=1)
 
-    window = max(1, int(sr * 0.05))  # 50ms window
+    window = max(1, int(sr * 0.04))
     windows = [audio[i : i + window] for i in range(0, len(audio), window)]
     active = [np.sqrt(np.mean(np.square(w))) >= threshold for w in windows]
 
     out: list[np.ndarray] = []
     i = 0
-    max_silent_windows = max(1, int(max_silence_s / 0.05))
+    max_silent_windows = max(1, int(max_silence_s / 0.04))
 
     while i < len(windows):
         if active[i]:
@@ -57,7 +57,9 @@ def tighten_silences(
         out.extend(windows[i : min(j, i + max_silent_windows)])
         i = j
 
-    return np.concatenate(out) if out else audio
+    res = np.concatenate(out) if out else audio
+    tail_pad = np.zeros(int(sr * 0.30), dtype=res.dtype)
+    return np.concatenate([res, tail_pad])
 
 
 def audit_audio(audio: np.ndarray, sr: int, expected_chars: Optional[int] = None) -> dict:
@@ -79,6 +81,10 @@ def audit_audio(audio: np.ndarray, sr: int, expected_chars: Optional[int] = None
             raise RuntimeError(
                 f"Truncated narration detected: {duration_seconds:.2f}s for {expected_chars} characters (expected >= {min_expected:.2f}s)"
             )
+
+    last_30ms_peak = float(np.max(np.abs(audio[-int(sr * 0.030) :])))
+    if last_30ms_peak > 0.03:
+        raise RuntimeError(f"Narration cut off abruptly at end (last 30ms peak={last_30ms_peak:.3f})")
 
     tail = audio[-min(len(audio), int(sr * 0.25)) :]
     tail_rms = float(np.sqrt(np.mean(np.square(tail))))
