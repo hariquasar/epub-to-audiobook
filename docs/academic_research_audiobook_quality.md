@@ -98,3 +98,5 @@ To deliver a fatigue-free listening experience across earbuds, car stereos, and 
 | **Word-Level Sync & Kara-Text** | Synchronized WebVTT / LRC transcript generation for read-along | 🎯 **v0.4.0** |
 | **Progressive Streaming & Continuous Playback** | Zero-wait instant listening, live chunk buffering, auto-play chapter queue | 🎯 **v0.5.0** |
 | **OpenAPI & Streaming Server** | OpenAI `/v1/audio/speech` standard endpoint & Audiobookshelf sync | 🎯 **v1.0.0** |
+| **Cross-Platform Mobile Library App** | Native iOS & Android bookshelf app (Flutter), 1-tap import, CarPlay / Auto | 📱 **v2.0.0** |
+| **Cloud Sync & Edge Neural AI** | Multi-device playback sync (Web ↔ iOS ↔ Android), on-device CoreML / NNAPI | ☁️ **v3.0.0** |

@@ -126,6 +126,8 @@ Read our full research paper: [docs/academic_research_audiobook_quality.md](docs
 - 🎯 **v0.4.0 - Time-Aligned Transcripts & HCI Enhancements**: Synchronized WebVTT / LRC read-along transcripts, speed-invariant pitch scaling optimization (1.25x–2.0x playback), chapter cover embedding.
 - 🎯 **v0.5.0 - Progressive Streaming & Continuous Playback (Upload & Keep Listening)**: Zero-wait instant listening (start playing within 3s of uploading EPUB), live WebSocket/HTTP stream, seamless auto-play chapter queue, and background pre-generation ahead of playback cursor.
 - 🎯 **v1.0.0 - Production Readiness & Open Cloud APIs**: OpenAI `/v1/audio/speech` standard API server, Audiobookshelf library sync, >90% test coverage, and multi-lingual translation pipeline.
+- 📱 **v2.0.0 - Cross-Platform Mobile Library App (iOS / Apple & Android)**: Beautiful library-style mobile app (Flutter / React Native) with personal bookshelf grid, 1-tap EPUB import from iCloud / Google Drive / Files, zero-wait instant streaming playback on mobile, auto-cache offline chapters, lock-screen / CarPlay / Android Auto controls, and sleep timer.
+- ☁️ **v3.0.0 - Personal Cloud Sync, Multi-Device Handoff & Edge AI**: Complete personal cloud ecosystem with seamless playback position & library sync across Web ↔ iOS ↔ Android ↔ Desktop, on-device neural TTS acceleration (Apple Neural Engine / CoreML & Android NNAPI), multi-user family library sharing, and AI chapter insights.
 
 ---
 

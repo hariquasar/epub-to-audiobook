@@ -22,6 +22,51 @@ from core import (
 _ENGINES: dict[str, BaseTTSEngine] = {}
 
 
+def liquid_glass_css() -> str:
+    """Return the tokenized Liquid Glass layer used by the Gradio studio."""
+    return """
+    :root {
+      --ink: #122033;
+      --text-primary: #102039;
+      --text-secondary: #4e627e;
+      --line: rgba(255, 255, 255, 0.72);
+      --glass: rgba(255, 255, 255, 0.50);
+      --glass-strong: rgba(255, 255, 255, 0.72);
+      --accent: #0a6ee8;
+      --accent-deep: #0758bd;
+      --shadow: 0 20px 60px rgba(20, 61, 110, 0.16), 0 2px 8px rgba(31, 68, 112, 0.08);
+    }
+    .gradio-container {
+      min-height: 100vh;
+      color: var(--text-primary);
+      background:
+        radial-gradient(circle at 4% 2%, rgba(144, 211, 255, .75), transparent 29rem),
+        radial-gradient(circle at 96% 10%, rgba(212, 180, 255, .58), transparent 28rem),
+        radial-gradient(circle at 50% 100%, rgba(164, 243, 219, .58), transparent 31rem),
+        linear-gradient(135deg, #e9f5ff 0%, #f5f3ff 52%, #e9faf3 100%);
+    }
+    .app-shell { max-width: 1180px; margin: 0 auto; padding: 32px 20px 48px; }
+    .hero { margin: 0 0 24px; padding: 30px 32px; border: 1px solid var(--line); border-radius: 28px; background: var(--glass); box-shadow: var(--shadow); backdrop-filter: blur(28px) saturate(145%); -webkit-backdrop-filter: blur(28px) saturate(145%); }
+    .eyebrow { margin: 0 0 9px; color: #0758bd; font-size: .76rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+    .hero h1 { margin: 0; color: var(--ink); font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -.045em; line-height: 1.03; }
+    .hero p { max-width: 650px; margin: 14px 0 0; color: var(--text-secondary); font-size: 1.03rem; line-height: 1.6; }
+    .glass-panel { height: 100%; padding: 22px; border: 1px solid var(--line); border-radius: 24px; background: var(--glass); box-shadow: var(--shadow); backdrop-filter: blur(24px) saturate(135%); -webkit-backdrop-filter: blur(24px) saturate(135%); }
+    .section-label { margin: 0 0 6px; color: var(--ink); font-size: 1.08rem; font-weight: 720; }
+    .section-copy { margin: 0 0 18px; color: var(--text-secondary); font-size: .92rem; line-height: 1.5; }
+    .upload-zone { min-height: 148px; border: 1px dashed rgba(10, 110, 232, .52); border-radius: 18px; background: rgba(255,255,255,.42); }
+    .upload-zone:hover { background: rgba(255,255,255,.7); border-color: var(--accent); }
+    .primary-action button { min-height: 52px; border: 0; border-radius: 16px; background: linear-gradient(135deg, var(--accent), #48a4ff); box-shadow: 0 10px 22px rgba(10, 110, 232, .25); color: white; font-weight: 700; transition: transform 160ms ease, box-shadow 160ms ease; }
+    .primary-action button:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(10, 110, 232, .32); }
+    .secondary-action button { min-height: 44px; border: 1px solid rgba(10, 110, 232, .28); border-radius: 14px; background: var(--glass-strong); color: #0758bd; font-weight: 650; }
+    .gradio-container label, .gradio-container .block-title { color: var(--ink) !important; font-weight: 650 !important; }
+    .gradio-container input, .gradio-container textarea, .gradio-container .wrap { border-color: rgba(72, 104, 143, .22) !important; background: rgba(255,255,255,.62) !important; }
+    .gradio-container button:focus-visible, .gradio-container input:focus-visible, .gradio-container textarea:focus-visible { outline: 3px solid rgba(10, 110, 232, .52) !important; outline-offset: 2px; }
+    .output-status textarea { color: var(--text-primary) !important; }
+    @media (max-width: 760px) { .app-shell { padding: 18px 12px 32px; } .hero { padding: 24px 20px; border-radius: 22px; } .glass-panel { padding: 18px; border-radius: 20px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+    """
+
+
 def get_engine(engine_type: str) -> BaseTTSEngine:
     global _ENGINES
     if engine_type not in _ENGINES:

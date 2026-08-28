@@ -35,6 +35,16 @@ MILESTONES = [
         "description": "OpenAI /v1/audio/speech standard API compatibility server, Audiobookshelf direct library sync, full test coverage > 90%, and end-to-end multi-lingual translation-narration pipeline.",
         "due_date": "2026-11-30T00:00:00Z",
     },
+    {
+        "title": "v2.0.0 - Cross-Platform Mobile Library App (iOS / Apple & Android)",
+        "description": "Native iOS & Android library-style mobile app (Flutter/React Native): personal bookshelf UI, 1-tap EPUB import from iCloud/Google Drive/Files, instant zero-wait streaming playback, offline chapter auto-cache, lock-screen/CarPlay/Android Auto controls, and sleep timer.",
+        "due_date": "2027-01-15T00:00:00Z",
+    },
+    {
+        "title": "v3.0.0 - Personal Cloud Sync, Multi-Device Handoff & Edge AI",
+        "description": "Full personal cloud sync ecosystem: seamless playback position & library sync across Web ↔ iOS ↔ Android ↔ Desktop, on-device neural TTS acceleration (Apple Neural Engine / CoreML & Android NNAPI), multi-user family library sharing, and AI chapter insights.",
+        "due_date": "2027-03-01T00:00:00Z",
+    },
 ]
 
 REPO = "hariquasar/epub-to-audiobook"
