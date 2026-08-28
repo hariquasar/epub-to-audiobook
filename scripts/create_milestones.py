@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Helper script to create GitHub Milestones and Issues for epub-to-audiobook."""
-import os
+
 import subprocess
 import sys
 
@@ -34,11 +34,17 @@ def main():
     print(f"Creating milestones for {REPO}...")
     for m in MILESTONES:
         cmd = [
-            "gh", "api", f"/repos/{REPO}/milestones",
-            "-X", "POST",
-            "-f", f"title={m['title']}",
-            "-f", f"description={m['description']}",
-            "-f", f"due_on={m['due_date']}",
+            "gh",
+            "api",
+            f"/repos/{REPO}/milestones",
+            "-X",
+            "POST",
+            "-f",
+            f"title={m['title']}",
+            "-f",
+            f"description={m['description']}",
+            "-f",
+            f"due_on={m['due_date']}",
         ]
         try:
             res = subprocess.run(cmd, capture_output=True, text=True)
