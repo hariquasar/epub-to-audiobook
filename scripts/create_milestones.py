@@ -26,9 +26,14 @@ MILESTONES = [
         "due_date": "2026-10-25T00:00:00Z",
     },
     {
+        "title": "v0.5.0 - Progressive Streaming & Continuous Playback (Upload & Keep Listening)",
+        "description": "Zero-wait instant listening: upload any EPUB and start listening immediately in the browser via chunk pre-buffering, live WebSocket/HTTP stream, seamless auto-play chapter queue, and background pre-generation ahead of playback cursor.",
+        "due_date": "2026-11-08T00:00:00Z",
+    },
+    {
         "title": "v1.0.0 - Production Readiness & Open Cloud APIs",
         "description": "OpenAI /v1/audio/speech standard API compatibility server, Audiobookshelf direct library sync, full test coverage > 90%, and end-to-end multi-lingual translation-narration pipeline.",
-        "due_date": "2026-11-15T00:00:00Z",
+        "due_date": "2026-11-30T00:00:00Z",
     },
 ]
 

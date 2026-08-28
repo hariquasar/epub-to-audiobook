@@ -96,4 +96,5 @@ To deliver a fatigue-free listening experience across earbuds, car stereos, and 
 | **Zero-Shot Voice Cloning** | Reference audio prompt extraction for custom character timbre | 🎯 **v0.2.0** |
 | **Multi-Speaker Dramatization** | LLM/Rule-based character dialogue classifier & multi-voice routing | 🎯 **v0.3.0** |
 | **Word-Level Sync & Kara-Text** | Synchronized WebVTT / LRC transcript generation for read-along | 🎯 **v0.4.0** |
+| **Progressive Streaming & Continuous Playback** | Zero-wait instant listening, live chunk buffering, auto-play chapter queue | 🎯 **v0.5.0** |
 | **OpenAPI & Streaming Server** | OpenAI `/v1/audio/speech` standard endpoint & Audiobookshelf sync | 🎯 **v1.0.0** |

@@ -124,6 +124,7 @@ Read our full research paper: [docs/academic_research_audiobook_quality.md](docs
 - 🎯 **v0.2.0 - Psychoacoustics & ACX Audio Mastering Standards**: Audible ACX (-20 dB RMS, -3 dBTP limiter, < -60 dB noise floor), EBU R128 loudness normalizer, and zero-shot reference voice cloning.
 - 🎯 **v0.3.0 - Computational Narratology & Multi-Speaker Dramatization**: Context-aware prosody modeling (Interspeech/ACL), automatic character dialogue extraction, narrator/character voice assignment, parallel batch processing, Docker container.
 - 🎯 **v0.4.0 - Time-Aligned Transcripts & HCI Enhancements**: Synchronized WebVTT / LRC read-along transcripts, speed-invariant pitch scaling optimization (1.25x–2.0x playback), chapter cover embedding.
+- 🎯 **v0.5.0 - Progressive Streaming & Continuous Playback (Upload & Keep Listening)**: Zero-wait instant listening (start playing within 3s of uploading EPUB), live WebSocket/HTTP stream, seamless auto-play chapter queue, and background pre-generation ahead of playback cursor.
 - 🎯 **v1.0.0 - Production Readiness & Open Cloud APIs**: OpenAI `/v1/audio/speech` standard API server, Audiobookshelf library sync, >90% test coverage, and multi-lingual translation pipeline.
 
 ---
