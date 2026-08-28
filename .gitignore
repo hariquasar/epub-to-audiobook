@@ -12,10 +12,13 @@ Qwen3-TTS-*/
 
 # Generated Audio Outputs & Chunks
 shujian_qwen_customvoice_*/
+audiobook_outputs/
 consistency_test/
 *.wav
 *.flac
 *.mp3
+*.m4a
+*.m4b
 *.aac
 *.partial.wav
 
